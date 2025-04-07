@@ -745,14 +745,6 @@ message WorkflowPolicy {
   }
 }
 
-message WorkflowResult {
-	bool successful = 1;
-}
-
-message ActionResult {
-	bool successful = 1;
-}
-
 message ContractTerminationManualReview {
 	ContractTerminationDetails contract_termination_details = 1;
 }

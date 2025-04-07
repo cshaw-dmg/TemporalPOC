@@ -8,7 +8,7 @@ namespace JobWorker;
 public class CancelJobs
 {
 	[WorkflowRun]
-	public async Task<WorkflowResult> RunAsync(WorkflowPolicy policy)
+	public async Task RunAsync(WorkflowPolicy policy)
 	{
 		RetryPolicy retryPolicy = new()
 		{
@@ -22,7 +22,5 @@ public class CancelJobs
 			() => Activities.CancelJobs(policy),
 			new ActivityOptions { StartToCloseTimeout = TimeSpan.MaxValue, RetryPolicy = retryPolicy }
 		);
-
-		return new WorkflowResult { Successful = true };
 	}
 }

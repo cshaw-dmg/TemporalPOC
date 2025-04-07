@@ -8,7 +8,7 @@ namespace ConractWorker;
 public class TerminateCustomerContractWorkflow
 {
 	[WorkflowRun]
-	public async Task<WorkflowResult> RunAsync(WorkflowPolicy policy)
+	public async Task RunAsync(WorkflowPolicy policy)
 	{
 		// Retry policy
 		RetryPolicy retryPolicy = new()
@@ -38,7 +38,5 @@ public class TerminateCustomerContractWorkflow
 
 		var done = await child;
 		//await child.GetResultAsync();
-
-		return new WorkflowResult { Successful = true };
 	}
 }
