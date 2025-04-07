@@ -28,3 +28,6 @@ dotnet run
 2. The **ContractWorker** picks up and executes the necessary activities and child workflows.
 4. Upon completion, the worker updates the workflow state.
 5. The workflow result is returned to the client.
+
+## Edge Case Test
+This workflow also tests an edge case where a given service has an outdated proto definition but if a child workflow is called with an updated proto definition that child workflow will see all the fields

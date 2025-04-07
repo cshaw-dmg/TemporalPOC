@@ -23,3 +23,6 @@ It can also be started manually with the following command:
 cd JobWorker
 dotnet run
 ```
+
+## Edge Case Test
+This workflow is called by the ContractWorker workflow which has an outdated version of the WorkflowPolicy proto, even though that service isn't aware of some fields in the proto due to the usage of BinaryProtoConverter this workflow will still see those fields

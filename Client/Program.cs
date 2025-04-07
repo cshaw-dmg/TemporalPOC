@@ -1,17 +1,28 @@
-﻿using ConractWorker;
-using Temporalio.Client;
+﻿using Google.Protobuf.WellKnownTypes;
 
 // Connect to the Temporal server
-var client = await TemporalClient.ConnectAsync(new("localhost:7233") { Namespace = "default" });
+
+var client = await Helpers.CreateClient();
 
 var workflowId = $"{Guid.NewGuid()}";
 
 try
 {
 	// Start the workflow
-	var handle = await client.StartWorkflowAsync(
-		 (TerminateCustomerContractWorkflow wf) => wf.RunAsync(Guid.NewGuid()),
-		 new(id: workflowId, taskQueue: "CONTRACT_TASK_QUEUE"));
+	DMG.Common.WorkflowPolicy arg = new()
+	{
+		ContractTerminationManualReview = new DMG.Common.ContractTerminationManualReview
+		{
+			ContractTerminationDetails = new DMG.Common.ContractTerminationDetails
+			{
+				ContractId = Guid.NewGuid().ToString(),
+				EffectiveDate = DateTime.UtcNow.ToTimestamp(),
+				TermReason = "Some reason"
+			}
+		}
+	};
+
+	var handle = await client.StartWorkflowAsync("TerminateCustomerContractWorkflow", [arg], new Temporalio.Client.WorkflowOptions(id: workflowId, taskQueue: "CONTRACT_TASK_QUEUE") { ExecutionTimeout = TimeSpan.MaxValue });
 
 	Console.WriteLine($"Started Workflow {workflowId}");
 

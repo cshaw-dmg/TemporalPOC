@@ -1,11 +1,14 @@
-﻿using Temporalio.Activities;
+﻿using DMG.Common;
+using Temporalio.Activities;
 
 namespace JobWorker;
 public class Activities
 {
 	[Activity]
-	public static async Task CancelJobs(Guid contractId)
+	public static async Task<ActionResult> CancelJobs(WorkflowPolicy policy)
 	{
-		await Task.Delay(20000);
+		await Task.Delay(1000);
+
+		return new ActionResult { Successful = true };
 	}
 }

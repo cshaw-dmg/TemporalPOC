@@ -13,7 +13,7 @@ while (true)
 {
 	try
 	{
-		client = await TemporalClient.ConnectAsync(new(temporalServer));
+		client = await Helpers.CreateClient();
 		break;
 	}
 	catch (Exception e)

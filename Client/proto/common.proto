@@ -1,0 +1,764 @@
+﻿syntax = "proto3";
+
+package dmg.v1;
+option csharp_namespace = "DMG.Common";
+option java_package = "com.dmgpro.common";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+message Date {
+  // Year of date. Must be from 1 to 9999, or 0 if specifying a date without
+  // a year.
+  int32               year              = 1;
+
+  // Month of year. Must be from 1 to 12, or 0 if specifying a year without a
+  // month and day.
+  int32               month             = 2;
+
+  // Day of month. Must be from 1 to 31 and valid for the year and month, or 0
+  // if specifying a year by itself or a year and month where the day is not
+  // significant.
+  int32               day               = 3;
+}
+
+message Time {
+  int32               hour              = 1;
+
+  int32               minute            = 2;
+
+  int32               seconds           = 3;
+
+  // standard timezone string from ICANN/IANA maintained time zone database
+  // https://en.wikipedia.org/wiki/Tz_database
+  string              timezone          = 4;
+}
+
+message Decimal {
+  // The whole units of the decimal.
+  int64               units             = 1;
+
+  // Number of nano (10^-9) units of the decimal.
+  // The value must be between -999,999,999 and +999,999,999 inclusive.
+  // If `units` is positive, `nanos` must be positive or zero.
+  // If `units` is zero, `nanos` can be positive, zero, or negative.
+  // If `units` is negative, `nanos` must be negative or zero.
+  // For example $-1.75 is represented as `units`=-1 and `nanos`=-750,000,000.
+  sfixed32            nanos             = 2;
+}
+
+message Money {
+  // three letter currency code defined by ISO 4217
+  string              currency_code     = 1;
+  
+  // total amount, shifted by three decimal places:
+  // 123456 => 123.456
+  // 2123456000 => 2123456.000
+  int64               amount            = 2;
+}
+
+//This message differes from Money in that it supports a greater precision
+//than the Money message. This is useful for calculations that require fractional 
+//cents or other fractional currency units.
+message Currency 
+{
+  // The three-letter currency code defined in ISO 4217.
+  string              currency_code     = 1;
+  // The whole units of the amount.
+  // For example if `currencyCode` is `"USD"`, then 1 unit is one US dollar.
+  int64               units             = 2;  
+  // Number of nano (10^-9) units of the amount.
+  // The value must be between -999,999,999 and +999,999,999 inclusive.
+  // If `units` is positive, `nanos` must be positive or zero.
+  // If `units` is zero, `nanos` can be positive, zero, or negative.
+  // If `units` is negative, `nanos` must be negative or zero.
+  // For example $-1.75 is represented as `units`=-1 and `nanos`=-750,000,000.
+  int32               nanos             = 3;
+
+}
+
+// Tracking data about each record in a bubble SOR
+message RecordMetaData {
+  // the UTC timestamp when the record was first created
+  google.protobuf.Timestamp           created_utc           = 1;
+
+  // the UTC timestamp of the time the record was last modified
+  google.protobuf.Timestamp           modified_utc          = 2;
+
+  // the utc timestamp of the last time the record was touched
+  // this is used to force a record into a change/state topic
+  // without changing any of the record contents
+  google.protobuf.Timestamp           touched_utc           = 3;
+
+  // the last user who made a change to this record - this
+  // could be a system user
+  string                              modified_by_user_id   = 4;
+  
+  string                              created_by_user_id    = 5;
+}
+
+enum ContactMethodType {
+	CONTACT_METHOD_TYPE_UNSPECIFIED = 0;
+  CONTACT_METHOD_TYPE_HOME        = 1;
+  CONTACT_METHOD_TYPE_WORK        = 2;
+}
+
+enum RowStatus {
+	ROW_STATUS_UNSPECIFIED		      = 0;
+	ROW_STATUS_ACTIVE			          = 1;
+	ROW_STATUS_INACTIVE			        = 2;
+	ROW_STATUS_DELETED			        = 3;
+}
+
+enum NotificationChannel {
+  NOTIFICATION_CHANNEL_UNSPECIFIED      = 0;
+  NOTIFICATION_CHANNEL_EMAIL            = 1;
+  NOTIFICATION_CHANNEL_SMS              = 2;
+  NOTIFICATION_CHANNEL_PUSH             = 3;
+  NOTIFICATION_CHANNEL_VOICE            = 4;
+  NOTIFICATION_CHANNEL_NONE             = 99;
+}
+
+enum NotificationCategory {
+  NOTIFICATION_CATEGORY_UNSPECIFIED     = 0;
+  NOTIFICATION_CATEGORY_ACCOUNT         = 1;
+  NOTIFICATION_CATEGORY_AR              = 2;
+  NOTIFICATION_CATEGORY_AP              = 3;
+  NOTIFICATION_CATEGORY_MARKETING       = 4;
+  NOTIFICATION_CATEGORY_WORK            = 5;  
+}
+
+message Address {
+  string              address_id                    = 1;
+  string					    line_1			                  = 2;
+  string					    line_2			                  = 3;
+  string              line_3					              = 4;
+  string              line_4					              = 5;
+  string					    city			                    = 6;
+  string					    state			                    = 7;
+  string					    postal_code			              = 8;
+  string              county                        = 9;
+  string					    country			                  = 10;
+  ContactMethodType   address_type                  = 11;
+  bool                is_primary                    = 12;
+  Decimal             latitude		                  = 13;
+  Decimal             longitude		                  = 14;
+  Decimal             altitude_meters               = 15;
+  Decimal             precision_meters              = 16;
+  string              district                      = 17;
+  bool                is_standardized               = 18;
+  Verification        verification                  = 19;
+  repeated Verification previous_verifications      = 20;
+  Verification        gps_verification              = 21;
+  repeated Verification previous_gps_verifications  = 22;
+  string tag                                        = 23;
+  RowStatus record_status                           = 24;
+  google.protobuf.StringValue timezone 		    = 25;
+}
+
+
+message Email {											
+	string  			      email_id				              = 1;
+	string					    email_address	                = 2;
+  ContactMethodType		email_type			              = 3;
+	bool					      is_primary			              = 4;
+  Verification        verification                  = 5;
+  repeated Verification previous_verifications      = 6;
+  string tag                                        = 7;
+  RowStatus record_status                           = 8;
+}
+
+message Phone {											
+	string				      phone_id				              = 1;
+	string					    phone_number		              = 2;
+	string					    phone_extension	              = 3;
+  ContactMethodType		phone_type			              = 4;
+	bool					      is_primary			              = 5;
+	bool					      is_cell					              = 6;
+  Verification        verification                  = 7;
+  repeated Verification previous_verifications      = 8;
+  string tag                                        = 9;
+  RowStatus record_status                           = 10;
+}
+
+enum AttachmentOrigin {
+  ATTACHMENT_ORIGIN_UNSPECIFIED         = 0;
+  ATTACHMENT_ORIGIN_SYSTEM              = 1;
+  ATTACHMENT_ORIGIN_PROVIDER            = 2;
+  ATTACHMENT_ORIGIN_TECHNICIAN          = 3;
+  ATTACHMENT_ORIGIN_OPERATIONS          = 4;
+  ATTACHMENT_ORIGIN_CUSTOMER            = 5;
+  ATTACHMENT_ORIGIN_INTEGRATIONS        = 6;
+  ATTACHMENT_ORIGIN_FIELD               = 7;
+}
+
+message Rate {
+    dmg.v1.Money				      value = 1;
+    dmg.v1.UnitType				      unit = 2;
+}
+
+message Quantity {
+  double value                  = 1;
+}
+
+message File {
+  // the ID of the file in the large object store
+  string                    content_lobj_id     = 1;
+
+  // the MIME type of the file
+  string                    content_type        = 2;
+
+  // the UTC timestamp when the file was first created
+  google.protobuf.Timestamp created_at_utc      = 3;
+  
+  // the ID of the user that created the file
+  string                    created_by_user_id  = 4;
+  
+  // the original name of the file
+  string                    file_name           = 5;
+
+  // where did hte file originate from
+  AttachmentOrigin          origin              = 6;
+
+  // tracking for this record
+  RecordMetaData            meta_data           = 7;
+}
+
+message Photo {
+  // the ID of the photo in the large object store
+  string                    content_lobj_id     = 1;
+  
+  // the format of the photo
+  PhotoFormat               photo_format        = 2;
+  
+  // the UTC timestamp when the photo was first created
+  google.protobuf.Timestamp created_at_utc      = 3;
+  
+  // the ID of the user that created the photo
+  string                    created_by_user_id  = 4;
+  
+  // GPS coordinates for the photo
+  GeoCoordinate             geo_coordinate      = 5;
+
+  // where did the file originate from
+  AttachmentOrigin          origin              = 6;
+
+  // tracking for this record
+  RecordMetaData            meta_data           = 7;
+
+  // the original name of the file
+  string                    file_name           = 8;
+
+  // optional, comment added by the user on the photo
+  google.protobuf.StringValue comment           = 9;
+
+  // the MIME type of the photo
+  string                    content_type        = 10;
+}
+
+// the format for a photo - there is no "PHOTO_FORMAT_UNSPECIFIED" since
+// every photo must be in a supported format
+enum PhotoFormat {
+  PHOTO_FORMAT_JPG    = 0;
+  PHOTO_FORMAT_PNG    = 1;
+  PHOTO_FORMAT_HEIC   = 2;
+}
+
+// a GPS coordinate defined as a position in 3-dimension space
+message GeoCoordinate {
+  // the latitude component of the GPS coordinate
+  double              latitude                    = 1;
+  
+  // the longitude component of the GPS coordinate
+  double              longitude                   = 2;
+  
+  // number of meters of error in the reported coordinates
+  // a value of 0 means that no precision information was provided
+  float               accuracy_meters             = 3;
+  
+  // the altitude of the coordinate, in meters
+  optional float      altitude_meters             = 4;
+  
+  // a value of 0 means that no vertical accuracy was provided
+  float               vertical_accuracy_meters    = 5;
+  
+  // heading in degrees where true north is 0
+  optional float      heading_degrees             = 6;
+
+  // the UTC timestamp when this coordinate was colledcted from the source
+  google.protobuf.Timestamp  collected_at_utc		= 7;
+
+  // if true, then this coordinate has been mocked; otherwise the coordinate is real
+  bool                is_mocked                  = 8;
+}
+
+// enum representing the integration system used at customer or property level
+enum WorkOrderManagementSystemType {
+  option deprecated = true;
+  WORK_ORDER_MANAGEMENT_SYSTEM_TYPE_UNSPECIFIED			= 0;
+  WORK_ORDER_MANAGEMENT_SYSTEM_TYPE_SERVICE_CHANNEL		= 1;
+  WORK_ORDER_MANAGEMENT_SYSTEM_TYPE_VERISAE				= 2;
+  WORK_ORDER_MANAGEMENT_SYSTEM_TYPE_TARGET			= 3;
+  WORK_ORDER_MANAGEMENT_SYSTEM_TYPE_UPS					= 4;
+  WORK_ORDER_MANAGEMENT_SYSTEM_TYPE_MANAGE_PATH_DOLLAR_GENERAL		= 5;
+  WORK_ORDER_MANAGEMENT_SYSTEM_TYPE_CITY_FM				= 6;
+  WORK_ORDER_MANAGEMENT_SYSTEM_TYPE_ECO_TRAK			= 7;
+  WORK_ORDER_MANAGEMENT_SYSTEM_TYPE_FM_PILOT			= 8;
+}
+
+// Used at Customer, Property, and Work Order levels to know which integration system is used.
+enum IntegrationSystem {
+  INTEGRATION_SYSTEM_UNSPECIFIED     = 0;
+  INTEGRATION_SYSTEM_NONE            = 1;
+  INTEGRATION_SYSTEM_SERVICE_CHANNEL = 2;
+  INTEGRATION_SYSTEM_VERISAE         = 3;
+  INTEGRATION_SYSTEM_TARGET          = 4;
+  INTEGRATION_SYSTEM_UPS             = 5;
+  INTEGRATION_SYSTEM_MANAGE_PATH     = 6;
+  INTEGRATION_SYSTEM_CITY_FM         = 7;
+  INTEGRATION_SYSTEM_ECO_TRAK        = 8;
+  INTEGRATION_SYSTEM_FM_PILOT        = 9;
+  INTEGRATION_SYSTEM_EMAIL           = 10;
+  INTEGRATION_SYSTEM_FEXA            = 11;
+  INTEGRATION_SYSTEM_WEATHER_WORKS   = 12;
+  INTEGRATION_SYSTEM_OFFICE_TRAX     = 13;
+  INTEGRATION_SYSTEM_LEGACY_IPAD     = 14;
+  INTEGRATION_SYSTEM_CORRIGO         = 15;
+  INTEGRATION_SYSTEM_SERVICE_NOW     = 16;
+}
+
+// level of skill required for a particular service-type or labor rate
+enum Expertise {
+  EXPERTISE_UNSPECIFIED             = 0;
+  EXPERTISE_HELPER                  = 1;
+  EXPERTISE_APPRENTICE              = 2;
+  EXPERTISE_JOURNEYMAN              = 3;
+  EXPERTISE_MASTER                  = 4;
+  EXPERTISE_EXPERT                  = 5;
+  EXPERTISE_UNION                   = 6;
+  EXPERTISE_LICENSED                = 7;
+}
+
+// A common API response. This can be wrapped in another message if there is other data that needs to be returned
+// (such as an ID for a newly created entity).
+message CommandResponse {
+  oneof result {
+    // the command was processed and the current state will be updated
+    Success success                 = 1;
+    // the command was not processed, the current state will not be updated
+    Failure failure                 = 2;
+  }
+
+  message Success {
+    // the version number of the (last) event in the event topic
+    uint64 event_version            = 1;
+    // the version number of the updated current state record in the state topic for the entity
+    uint64 state_version            = 2;
+  }
+
+  message Failure {
+    // the reason(s) that the command failed
+    repeated FailureReason reason   = 1;
+  }
+
+  message FailureReason {
+    // a message describing why the command failed
+    string message                  = 1;
+    // a Failure/Response code that categorizes this failure
+    uint32 code                     = 2;
+  }
+}
+
+// catalog item type - this is a broad category of the entry
+enum CatalogItemType {
+	CATALOG_ITEM_TYPE_UNSPECIFIED		= 0;
+	CATALOG_ITEM_TYPE_PART				= 1;
+	CATALOG_ITEM_TYPE_MATERIAL			= 2;
+	CATALOG_ITEM_TYPE_RENTAL_EQUIPMENT	= 3;
+	CATALOG_ITEM_TYPE_OWNED_EQUIPMENT	= 4;
+	CATALOG_ITEM_TYPE_LABOR				= 5;    
+	CATALOG_ITEM_TYPE_TRIP				= 6;
+	CATALOG_ITEM_TYPE_FEE				= 7;
+	CATALOG_ITEM_TYPE_FLAT_RATE			= 8;
+}
+
+enum ServicePriority {
+	SERVICE_PRIORITY_UNSPECIFIED	= 0;
+	SERVICE_PRIORITY_NORMAL			= 1;
+	SERVICE_PRIORITY_OVERTIME		= 2;
+	SERVICE_PRIORITY_DOUBLETIME		= 3;
+	SERVICE_PRIORITY_EMERGENCY		= 4;
+}
+
+  // how the unit type is normally displayed
+enum UnitType {
+	UNIT_TYPE_UNSPECIFIED	= 0;
+	UNIT_TYPE_ITEM			= 1;
+	UNIT_TYPE_CASE			= 2;
+	UNIT_TYPE_GALLON		= 3;
+	UNIT_TYPE_LITER			= 4;
+	UNIT_TYPE_POUND			= 5;
+	UNIT_TYPE_KILO			= 6;
+	UNIT_TYPE_TON			= 7;
+	UNIT_TYPE_MINUTE		= 8;
+	UNIT_TYPE_HOUR			= 9;
+	UNIT_TYPE_TRIP			= 10;
+	UNIT_TYPE_DAY			= 11;
+	UNIT_TYPE_WEEK			= 12;
+	UNIT_TYPE_YD3			= 13;
+	UNIT_TYPE_YD2			= 14;
+	UNIT_TYPE_MALE_PIG		= 15 [deprecated=true];
+	UNIT_TYPE_FEMALE_PIG	= 16 [deprecated=true];
+	UNIT_TYPE_MILE			= 17;
+	UNIT_TYPE_METER			= 18;
+	UNIT_TYPE_JOB			= 19;
+  UNIT_TYPE_FOOT    = 20;
+  UNIT_TYPE_INCH    = 21;
+  UNIT_TYPE_EVENT   = 22;
+  UNIT_TYPE_TRUCK   = 23;
+  UNIT_TYPE_BAG     = 24;
+  UNIT_TYPE_SERVICE = 25;
+  UNIT_TYPE_SECOND  = 26;
+  UNIT_TYPE_VISIT   = 27;
+}
+
+
+// if this represents a flat rate then low_limit and high_limit should both be NULL
+message MarkupTier {
+    // if non-null then this is the low limit amount that this markup can appply to
+    // if null then there is no lower limit
+    Money                        low_limit               = 1;
+
+    // if non-null then this is hte uppor limit for this range 
+    // if null then there is no upper limit
+    Money                        high_limit              = 2;
+
+    // this is the markup percentage for this range
+    float                        markup_percentage       = 3;
+}
+
+
+// price markup rules for various catalog item types
+message MarkupRules {
+    // these are the catalog items type that this markup applies to
+    repeated CatalogItemType    catalog_item_type        = 1;
+
+    // the various 
+    repeated MarkupTier         markup_tiers             = 2;
+}
+
+// intent of the client request
+enum Intent{
+  INTENT_COST = 0;
+  INTENT_SPEED = 1;
+  INTENT_QUALITY = 2;
+}
+
+// work type
+enum WorkType {
+  WORK_TYPE_UNSPECIFIED = 0;
+  WORK_TYPE_JOB = 1;
+  WORK_TYPE_ESTIMATE_REQUEST = 2;
+  WORK_TYPE_COMPLAINT_JOB = 3;
+}
+
+enum TimeRoundingMethod {
+	TIME_ROUNDING_METHOD_UNSPECIFIED		= 0;
+	TIME_ROUNDING_METHOD_ROUND_LINE_ITEMS	= 1;
+	TIME_ROUNDING_METHOD_ROUND_SUMMARY		= 2;
+	TIME_ROUNDING_METHOD_NO_ROUNDING		= 3;
+}
+
+enum TechnicianType {
+  TECHNICIAN_TYPE_UNSPECIFIED     = 0;
+  TECHNICIAN_TYPE_REGULAR         = 1;
+  TECHNICIAN_TYPE_HELPER          = 2;
+}
+
+message GeoCoverageInfo {
+  string                    geocoverage_id            = 1;
+}
+
+enum TenantType {
+  TENANT_TYPE_UNKNOWN = 0;
+  TENANT_TYPE_INTERNAL = 1;
+  TENANT_TYPE_PROVIDER = 2;
+  TENANT_TYPE_CUSTOMER = 3;
+}
+
+message GrpcResponse 
+{
+  option deprecated = true;
+  bool                              success = 1; 
+  //Integer error code - please add new codes to documentation at https://divisionsinc.atlassian.net/wiki/spaces/DP/pages/1968177153/Error+Codes
+  //If there is no error set this to 0
+  int32                          error_code = 2;
+  //Optional - populate if there is an error
+  google.protobuf.StringValue error_message = 3;
+}
+
+//work type for a specific work order, default is non routine
+enum WorkOrderWorkType {
+  WORK_ORDER_WORK_TYPE_UNSPECIFIED     	= 0;
+  WORK_ORDER_WORK_TYPE_UNDETERMINED     = 1;
+  WORK_ORDER_WORK_TYPE_NON_ROUTINE      = 2;
+  WORK_ORDER_WORK_TYPE_ROUTINE     	= 3;
+}
+
+message DateRange {
+  google.protobuf.Timestamp start_date_utc 	= 1;
+  google.protobuf.Timestamp end_date_utc 	= 2;
+}
+
+//work type defined for billin
+enum WorkOrderType {
+  WORK_ORDER_TYPE_UNSPECIFIED		= 0;
+  WORK_ORDER_TYPE_UNDETERMINED 		= 1;
+  WORK_ORDER_TYPE_BILLING 		= 2;
+  WORK_ORDER_TYPE_TRACKING 		= 3;
+  WORK_ORDER_TYPE_BILLING_AND_TRACKING 	= 4;
+}
+
+enum ComplianceStatus {
+  COMPLIANCE_STATUS_UNSPECIFIED 	= 0;
+  COMPLIANCE_STATUS_NON_COMPLIANT 	= 1;
+  COMPLIANCE_STATUS_COMPLIANT 		= 2;
+}
+
+enum RateType {
+    RATE_TYPE_UNSPECIFIED           = 0;
+    RATE_TYPE_REGULAR               = 1;
+    RATE_TYPE_EMERGENCY             = 2;
+    RATE_TYPE_HOLIDAY               = 3;
+}
+
+message CatalogLineItem {
+	string                          catalong_item_id				= 1 [deprecated = true];
+	string                          name							= 2;
+	string                          description						= 3;
+	string                          catalog_item_id					= 4;
+}
+
+enum InvoiceLineItemType {
+	INVOICE_LINE_ITEM_TYPE_UNSPECIFIED		= 0;
+	INVOICE_LINE_ITEM_TYPE_LABOR			= 1;
+	INVOICE_LINE_ITEM_TYPE_TRIP				= 2;
+	INVOICE_LINE_ITEM_TYPE_MATERIAL			= 3;
+	INVOICE_LINE_ITEM_TYPE_EQUIPMENT		= 4;
+	INVOICE_LINE_ITEM_TYPE_FLAT_RATE		= 5;
+}
+
+enum ContractSubType {
+  CONTRACT_SUB_TYPE_UNSPECIFIED                 = 0;
+  CONTRACT_SUB_TYPE_NON_ROUTINE                 = 1;
+  CONTRACT_SUB_TYPE_PER_OCCURRENCE              = 2;
+  CONTRACT_SUB_TYPE_SEASONAL                    = 3;
+  CONTRACT_SUB_TYPE_SEASONAL_HYBRID             = 4;
+  CONTRACT_SUB_TYPE_SEASONAL_TIERED             = 5;
+  CONTRACT_SUB_TYPE_PER_EVENT                   = 6;
+  CONTRACT_SUB_TYPE_PER_TIME_AND_MATERIAL       = 7;
+  CONTRACT_SUB_TYPE_SEASONAL_FIXED              = 8;
+  CONTRACT_SUB_TYPE_SEASONAL_VARIABLE           = 9;
+  CONTRACT_SUB_TYPE_MIXED                       = 10;
+}
+
+enum JobSubType {
+  JOB_SUB_TYPE_UNSPECIFIED = 0;
+  JOB_SUB_TYPE_ROUTINE_REGULAR_JOB = 1;
+  JOB_SUB_TYPE_NON_ROUTINE_REGULAR_JOB = 2;
+  JOB_SUB_TYPE_ROUTINE_COMPLAINT = 3;
+  JOB_SUB_TYPE_NON_ROUTINE_COMPLAINT = 4;
+  JOB_SUB_TYPE_ROUTINE_REGULAR_TECHNICIAN_INITIATED_JOB = 5;
+  JOB_SUB_TYPE_NON_ROUTINE_REGULAR_INSPECTION_JOB = 6;
+}
+
+enum YearMonth {
+	YEAR_MONTH_UNSPECIFIED = 0;
+	YEAR_MONTH_JANUARY = 1;
+	YEAR_MONTH_FEBRUARY = 2;
+	YEAR_MONTH_MARCH = 3;
+	YEAR_MONTH_APRIL = 4;
+	YEAR_MONTH_MAY = 5;
+	YEAR_MONTH_JUNE = 6;
+	YEAR_MONTH_JULY = 7;
+	YEAR_MONTH_AUGUST = 8;
+	YEAR_MONTH_SEPTEMBER = 9;
+	YEAR_MONTH_OCTOBER = 10;
+	YEAR_MONTH_NOVEMBER = 11;
+	YEAR_MONTH_DECEMBER = 12;
+}
+
+enum WeekDay {
+	WEEK_DAY_UNSPECIFIED = 0;
+	WEEK_DAY_MONDAY = 1;
+	WEEK_DAY_TUESDAY = 2;
+	WEEK_DAY_WEDNESDAY = 3;
+	WEEK_DAY_THURSDAY = 4;
+	WEEK_DAY_FRIDAY = 5;
+	WEEK_DAY_SATURDAY = 6;
+	WEEK_DAY_SUNDAY = 7;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//
+// References are links to other entities within the system. They are used 
+// when you need a reference to be flexible or have multiple entries. This
+// takes the place of associations and targets
+//
+// if you want to represent multiple references then just use a repeated
+// field. 
+//////////////////////////////////////////////////////////////////////////
+
+// these are the different entities (usually SORs) that can be referenced 
+enum ReferenceType {
+  REFERENCE_TYPE_UNSPECIFIED                          = 0;
+  REFERENCE_TYPE_WORK                                 = 1;
+  REFERENCE_TYPE_CONTRACT                             = 2;      // customer contract
+  REFERENCE_TYPE_CUSTOMER_INVOICE                     = 3;
+  REFERENCE_TYPE_PROPOSAL                             = 4;
+  REFERENCE_TYPE_WORK_ORDER                           = 5;
+  REFERENCE_TYPE_TICKET                               = 6;
+  REFERENCE_TYPE_ESTIMATE                             = 7;
+  REFERENCE_TYPE_CUSTOMER                             = 8;
+  REFERENCE_TYPE_PROPERTY                             = 9;
+  REFERENCE_TYPE_PROVIDER_INVOICE                     = 10;
+  REFERENCE_TYPE_TICKET_BILLING                       = 11;
+  REFERENCE_TYPE_PROVIDER_BILLING                     = 12;
+  REFERENCE_TYPE_SURVEY                               = 13;
+  REFERENCE_TYPE_AGREEMENT                            = 14;     // provider agreement
+  REFERENCE_TYPE_CUSTOMER_TERM                        = 15;     // term within a customer contract
+  REFERENCE_TYPE_INSPECTION                           = 16;
+  REFERENCE_TYPE_COMPLAINT                            = 17;
+  REFERENCE_TYPE_SERVICE                              = 18;     // used by the service catalog
+  REFERENCE_TYPE_NOTE_BODY                            = 19;
+  REFERENCE_TYPE_EMAIL                                = 20;  
+  REFERENCE_TYPE_USER                                 = 21;
+  REFERENCE_TYPE_PROVIDER                             = 22;
+  REFERENCE_TYPE_SERVICE_LINE                         = 23;    // used by activity to reference a service line
+  REFERENCE_TYPE_SERVICE_TYPE                         = 24;    // used by activity to reference a service type
+  REFERENCE_TYPE_VISIT                                = 25;    // used by activity to reference visit
+  REFERENCE_TYPE_USER_DEVICE                          = 26;    // used by event log entry to reference the device id from which the coordinates come
+  REFERENCE_TYPE_DMG_CLIENT                           = 27;    // used by event log entry to reference the DMG registered client id for this application
+  REFERENCE_TYPE_TRACKING                             = 28;    // used by event log entry to reference the correlation id which can be any id from a different system including a trace id
+  REFERENCE_TYPE_PROVIDER_SERVICE_SCHEDULE            = 29;    // used by activity to reference a provider service schedule
+  REFERENCE_TYPE_PROVIDER_SERVICE_SCHEDULED_ACTIVITY  = 30;    // used by activity to reference a provider service scheduled activity
+  REFERENCE_TYPE_TRANSACTION                          = 31;    // a transaction from shared state
+  REFERENCE_TYPE_RATE_CARD                            = 32;    // a rate card
+  REFERENCE_TYPE_SUGGESTED_WORK_TRIGGER               = 33;    // used to reference a suggested work trigger
+  REFERENCE_TYPE_CUSTOMER_INVOICE_TRIGGER             = 34;    // used to reference a customer invoice trigger
+  REFERENCE_TYPE_NOTE                                 = 35;    // generic note reference
+  REFERENCE_TYPE_CUSTOMER_DIRECT_WORK_ORDER           = 36;    // to reference customer direct work order of dmg 360 portal.
+  REFERENCE_TYPE_PARAMETERS_SET                       = 37;    // alternative to contract terms sheets for tickets created from DMG 360.
+}
+
+// this is an reference by type and id - the type tells the entitiy (ie. 
+// table, Topic, SOR..) and the id is the primary key to that entity
+message Reference {
+  ReferenceType         type        = 1;
+  string                id          = 2;
+
+  // optional tag to help identify the reference
+  string                tag         = 3;
+}
+
+// this is a way to send any message/entity as a byte string - it is 
+// similiar to the google Any message but is more specific for us
+// and is not as wide open as it can only hold a ReferenceType entity
+message ReferenceContent {
+  ReferenceType         type        = 1;
+  bytes                 content     = 2;
+}
+
+message ApiResponse 
+{
+  bool                        success       = 1; 
+  // Integer response code - please add new codes to documentation at https://divisionsinc.atlassian.net/wiki/spaces/DP/pages/2612920323/Response+Codes
+  int32                       response_code = 2;
+  // optional
+  string                      message       = 3;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//
+// This can be used to define the visibility of a record. It is based on 
+// bitflag defined by the VisibilityGroups enum. If a record has the bit
+// set then the record should be visible to that group. Visibility should
+// still be restricted by individuals within that group.
+//
+// if a record is visisble to all groups then the value should be set to
+// ACITIVTY_VISIBILITY_ALL
+//
+///////////////////////////////////////////////////////////////////////////
+message Visibility {
+  int32                       visible_to    = 1;
+}
+
+enum VisibilityGroup
+{
+    VISIBILITY_GROUP_UNSPECIFIED             = 0x00000000;
+    VISIBILITY_GROUP_CUSTOMER                = 0x00000001;
+    VISIBILITY_GROUP_PROVIDER                = 0x00000002;
+    VISIBILITY_GROUP_INTERNAL                = 0x00000004;
+    VISIBILITY_GROUP_TECHNICIAN              = 0x00000008;
+    VISIBILITY_GROUP_ALL                     = 0x7FFFFFFF;
+}
+
+// queue of verification actions - implemented as a linked list - the most recent is the head
+message Verification {
+  // overall status - meaning that we were able to verify the validity of the data
+  bool                        verified            = 1;
+  string                      verified_by         = 2;
+  google.protobuf.Timestamp   verified_on_utc     = 3;
+
+  // this will contain the details of the validation including ant changes made, verification results, etc.
+  repeated string             details             = 4;
+
+  // if there was a previous verification record
+  Verification                previous            = 5;
+  string                      verification_id     = 6;
+}
+
+// The different categories of rates.  These are typically the
+// names of the sheets from the rates upload.
+enum RateCategory {
+  RATE_CATEGORY_UNSPECIFIED               = 0;
+  RATE_CATEGORY_LABOR                     = 1;
+  RATE_CATEGORY_TRIP                      = 2;
+  RATE_CATEGORY_MATERIAL                  = 3;
+  RATE_CATEGORY_EQUIPMENT                 = 4;
+  RATE_CATEGORY_FLAT_RATE                 = 5;
+  RATE_CATEGORY_SERVICES                  = 6;
+  RATE_CATEGORY_PROVIDER_SERVICES         = 7;
+  RATE_CATEGORY_SEASONAL_FIXED_RATE       = 8;
+  RATE_CATEGORY_SEASONAL_HYBRID_RATE      = 9;
+  RATE_CATEGORY_SEASONAL_TIERED_RATE      = 10;
+  RATE_CATEGORY_SEASONAL_VARIABLE_RATE    = 11;
+  RATE_CATEGORY_PER_SCHEDULE              = 12;
+  RATE_CATEGORY_PER_VISIT                 = 13;
+  RATE_CATEGORY_PREFERENCES               = 14;
+}
+
+// Used for contract temporal termination
+message WorkflowPolicy {
+  oneof policy {
+    ContractTerminationManualReview contract_termination_manual_review = 1;
+  }
+}
+
+message WorkflowResult {
+	bool successful = 1;
+}
+
+message ActionResult {
+	bool successful = 1;
+}
+
+message ContractTerminationManualReview {
+	ContractTerminationDetails contract_termination_details = 1;
+}
+
+message ContractTerminationDetails {
+	string contract_id = 1;
+	string term_reason = 2;
+	google.protobuf.Timestamp effective_date = 3;
+}

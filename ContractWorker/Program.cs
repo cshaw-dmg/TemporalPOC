@@ -2,16 +2,13 @@
 using Temporalio.Client;
 using Temporalio.Worker;
 
-var temporalServer = Environment.GetEnvironmentVariable("TEMPORAL_SERVER") ?? "localhost:7233";
-
-// Create a client to connect to localhost on "default" namespace
 TemporalClient client;
 
 while (true)
 {
 	try
 	{
-		client = await TemporalClient.ConnectAsync(new(temporalServer));
+		client = await Helpers.CreateClient();
 		break;
 	}
 	catch (Exception e)

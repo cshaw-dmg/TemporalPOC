@@ -10,10 +10,14 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["ContractWorker.csproj", "Worker/TemporalPOC-Worker/"]
+COPY ["ContractWorker/ContractWorker.csproj", "./ContractWorker/ContractWorker.csproj"]
+COPY ["Common/Common.csproj", "./Common/"]
+
+WORKDIR /src/ContractWorker
 RUN dotnet restore "./ContractWorker.csproj"
-COPY . .
-RUN dotnet build "./ConractWorker.csproj" -c $BUILD_CONFIGURATION -o /app/build
+COPY ["ContractWorker", "."]
+COPY ["Common", "../Common"]
+RUN dotnet build "./ContractWorker.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish

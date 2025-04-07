@@ -31,6 +31,20 @@ services:
     volumes:
       - /var/lib/postgresql/data
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "8888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: temporal@divisionsinc.com
+      PGADMIN_DEFAULT_PASSWORD: temporal
+    networks:
+      - temporal-network
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
   temporal:
     container_name: temporal
     depends_on:
@@ -84,8 +98,8 @@ services:
     container_name: contract-worker
     image: contract-worker
     build:
-      context: ContractWorker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ContractWorker/Dockerfile
     depends_on:
       - temporal
     environment:
@@ -97,8 +111,8 @@ services:
     container_name: job-worker
     image: job-worker
     build:
-      context: JobWorker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: JobWorker/Dockerfile
     depends_on:
       - temporal
     environment:
@@ -110,3 +124,6 @@ networks:
   temporal-network:
     driver: bridge
     name: temporal-network
+
+volumes:
+  pgadmin-data:

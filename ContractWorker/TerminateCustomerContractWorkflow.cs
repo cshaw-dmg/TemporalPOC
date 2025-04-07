@@ -1,4 +1,5 @@
-﻿using Temporalio.Common;
+﻿using DMG.Common;
+using Temporalio.Common;
 using Temporalio.Workflows;
 
 namespace ConractWorker;
@@ -7,7 +8,7 @@ namespace ConractWorker;
 public class TerminateCustomerContractWorkflow
 {
 	[WorkflowRun]
-	public async Task RunAsync(Guid contractId)
+	public async Task<WorkflowResult> RunAsync(WorkflowPolicy policy)
 	{
 		// Retry policy
 		RetryPolicy retryPolicy = new()
@@ -18,22 +19,26 @@ public class TerminateCustomerContractWorkflow
 			MaximumAttempts = 3,
 		};
 
-		await Workflow.ExecuteActivityAsync(
-						 () => Activities.TerminateCustomerContractAsync(contractId),
-						 new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5), RetryPolicy = retryPolicy }
-					);
-		await Workflow.ExecuteActivityAsync(
-						 () => Activities.TerminateProviderAgreementAsync(Guid.NewGuid()),
-						 new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5), RetryPolicy = retryPolicy }
-					);
-
-		var child = await Workflow.StartChildWorkflowAsync("CancelJobs", [], new ChildWorkflowOptions
+		var child = Workflow.StartChildWorkflowAsync("CancelJobs", [policy], new ChildWorkflowOptions
 		{
 			ParentClosePolicy = ParentClosePolicy.RequestCancel,
 			TaskQueue = "FULFILMENT_TASK_QUEUE",
-			Id = Guid.NewGuid().ToString()
+			Id = Guid.NewGuid().ToString(),
+			ExecutionTimeout = TimeSpan.MaxValue,
 		});
 
-		await child.GetResultAsync();
+		await Workflow.ExecuteActivityAsync(
+						 () => Activities.TerminateCustomerContractAsync(policy),
+						 new ActivityOptions { StartToCloseTimeout = TimeSpan.MaxValue, RetryPolicy = retryPolicy }
+					);
+		await Workflow.ExecuteActivityAsync(
+						 () => Activities.TerminateProviderAgreementAsync(policy),
+						 new ActivityOptions { StartToCloseTimeout = TimeSpan.MaxValue, RetryPolicy = retryPolicy }
+					);
+
+		var done = await child;
+		//await child.GetResultAsync();
+
+		return new WorkflowResult { Successful = true };
 	}
 }

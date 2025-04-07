@@ -1,4 +1,5 @@
-﻿using Temporalio.Common;
+﻿using DMG.Common;
+using Temporalio.Common;
 using Temporalio.Workflows;
 
 namespace JobWorker;
@@ -7,7 +8,7 @@ namespace JobWorker;
 public class CancelJobs
 {
 	[WorkflowRun]
-	public async Task RunAsync()
+	public async Task<WorkflowResult> RunAsync(WorkflowPolicy policy)
 	{
 		RetryPolicy retryPolicy = new()
 		{
@@ -18,8 +19,10 @@ public class CancelJobs
 		};
 
 		await Workflow.ExecuteActivityAsync(
-						 () => Activities.CancelJobs(Guid.NewGuid()),
-						 new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5), RetryPolicy = retryPolicy }
-					);
+			() => Activities.CancelJobs(policy),
+			new ActivityOptions { StartToCloseTimeout = TimeSpan.MaxValue, RetryPolicy = retryPolicy }
+		);
+
+		return new WorkflowResult { Successful = true };
 	}
 }
